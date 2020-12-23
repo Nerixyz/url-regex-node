@@ -1,14 +1,28 @@
-const RE2 = require('re2');
-const ipRegex = require('ip-regex');
-const tlds = require('tlds');
+import * as tlds from 'tlds';
+
+import * as ipRegex from 'ip-regex';
+import { RsReWasm } from 'rsre-wasm';
 
 /* istanbul ignore next */
-const SafeRegExp = typeof RE2 === 'function' ? RE2 : RegExp;
+const SafeRegExp = RsReWasm;
 const ipv4 = ipRegex.v4().source;
 const ipv6 = ipRegex.v6().source;
 
-module.exports = (options) => {
-  options = {
+export interface UrlRegexOptions {
+  exact: boolean,
+  strict: boolean,
+  auth: boolean,
+  localhost: boolean,
+  parens: boolean,
+  apostrophes: boolean,
+  trailingPeriod: boolean,
+  ipv4: boolean,
+  ipv6: boolean,
+  tlds: string[],
+}
+
+function withDefaultOptions(inputOptions: Partial<UrlRegexOptions>): UrlRegexOptions {
+  return {
     exact: false,
     strict: false,
     auth: false,
@@ -18,10 +32,13 @@ module.exports = (options) => {
     trailingPeriod: false,
     ipv4: true,
     ipv6: true,
-    tlds,
-    returnString: false,
-    ...options
+    tlds: (tlds as any).default,
+    ...inputOptions
   };
+}
+
+export function urlRegexNodeRaw(inputOptions: Partial<UrlRegexOptions> = {}): string {
+  const options = withDefaultOptions(inputOptions);
 
   const protocol = `(?:(?:[a-z]+:)?//)${options.strict ? '' : '?'}`;
   // Add option to disable matching urls with HTTP Basic Authentication
@@ -48,8 +65,8 @@ module.exports = (options) => {
       ? '(?:[/?#][^\\s"]*)?'
       : '(?:[/?#][^\\s"\']*)?'
     : options.apostrophes
-    ? '(?:[/?#][^\\s"\\)]*)?'
-    : '(?:[/?#][^\\s"\\)\']*)?';
+      ? '(?:[/?#][^\\s"\\)]*)?'
+      : '(?:[/?#][^\\s"\\)\']*)?';
 
   // Added IPv6 support
   // <https://github.com/kevva/url-regex/issues/60>
@@ -59,10 +76,15 @@ module.exports = (options) => {
   if (options.ipv6) regex += `${ipv6}|`;
   regex += `${host}${domain}${tld})${port}${path}`;
 
-  // Add option to return the regex string instead of a RegExp
-  if (options.returnString) return regex;
+  return regex;
+}
+
+export function urlRegexNode(inputOptions: Partial<UrlRegexOptions> = {}): RsReWasm {
+  const options = withDefaultOptions(inputOptions)
+
+  const regex = urlRegexNodeRaw(options);
 
   return options.exact
     ? new SafeRegExp(`(?:^${regex}$)`, 'i')
     : new SafeRegExp(regex, 'ig');
-};
+}

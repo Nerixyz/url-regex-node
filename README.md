@@ -1,14 +1,6 @@
-# url-regex-safe
+# url-regex-node
 
-[![build status](https://img.shields.io/travis/com/niftylettuce/url-regex-safe.svg)](https://travis-ci.com/niftylettuce/url-regex-safe)
-[![code coverage](https://img.shields.io/codecov/c/github/niftylettuce/url-regex-safe.svg)](https://codecov.io/gh/niftylettuce/url-regex-safe)
-[![code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/sindresorhus/xo)
-[![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
-[![made with lass](https://img.shields.io/badge/made_with-lass-95CC28.svg)](https://lass.js.org)
-[![license](https://img.shields.io/github/license/niftylettuce/url-regex-safe.svg)](LICENSE)
-[![npm downloads](https://img.shields.io/npm/dt/url-regex-safe.svg)](https://npm.im/url-regex-safe)
-
-> Regular expression matching for URL's. Maintained, safe, and browser-friendly version of [url-regex][]. Resolves [CVE-2020-7661][cve] for Node.js servers. Works in Node v10.12.0+ and browsers.
+> Regular expression matching for URL's. Maintained, safe, and browser-friendly version of [url-regex][]. Resolves [CVE-2020-7661][cve] for Node.js servers. Works in Node v12+.
 
 
 ## Table of Contents
@@ -41,13 +33,13 @@ This package should hopefully more closely resemble real-world intended usage of
 [npm][]:
 
 ```sh
-npm install url-regex-safe
+npm install url-regex-node
 ```
 
 [yarn][]:
 
 ```sh
-yarn add url-regex-safe
+yarn add url-regex-node
 ```
 
 
@@ -58,7 +50,7 @@ yarn add url-regex-safe
 We've resolved [CVE-2020-7661][cve] by including [RE2][] for Node.js usage.  You will not have to manually wrap your URL regular expressions with `new RE2(urlRegex())` anymore through `url-regex-safe` (we do it automatically for you).
 
 ```js
-const urlRegexSafe = require('url-regex-safe');
+const urlRegexSafe = require('url-regex-node');
 
 const str = 'some long string with url.com in it';
 const matches = str.match(urlRegexSafe());
@@ -70,35 +62,6 @@ for (const match of matches) {
 console.log(urlRegexSafe({ exact: true }).test('github.com'));
 ```
 
-### Browser
-
-Since [RE2][] is not made for the browser, it will not be used, and therefore [CVE-2020-7661][cve] is still an issue on the client-side. However it is not severe since the most it would do is crash the browser tab (as on the Node.js side it would have crashed the entire process and thrown an out of memory exception).
-
-#### VanillaJS
-
-This is the solution for you if you're just using `<script>` tags everywhere!
-
-```html
-<script src="https://unpkg.com/url-regex-safe"></script>
-<script type="text/javascript">
-  (function() {
-    var str = 'some long string with url.com in it';
-    var matches = str.match(urlRegexSafe());
-
-    for (var i=0; i<matches.length; i++) {
-      console.log('match', matches[i]);
-    }
-
-    console.log(urlRegexSafe({ exact: true }).test('github.com'));
-  })();
-</script>
-```
-
-#### Bundler
-
-Assuming you are using [browserify][], [webpack][], [rollup][], or another bundler, you can simply follow [Node](#node) usage above.
-
-
 ## Options
 
 | Property         | Type    | Default Value                                                | Description                                                                                                                                                                                                                                                                                                                                                    |   |
@@ -106,7 +69,7 @@ Assuming you are using [browserify][], [webpack][], [rollup][], or another bundl
 | `exact`          | Boolean | `false`                                                      | Only match an exact String. Useful with `regex.test(str)` to check if a String is a URL. We set this to `false` by default in order to match String values such as `github.com` (as opposed to requiring a protocol or `www` subdomain).  We feel this closely more resembles real-world intended usage of this package.                                       |   |
 | `strict`         | Boolean | `false`                                                      | Force URL's to start with a valid protocol or `www` if set to `true`. If `true`, then it will allow any TLD as long as it is a minimum of 2 valid characters. If it is `false`, then it will match the TLD against the list of valid TLD's using [tlds](https://github.com/stephenmathieson/node-tlds#readme).                                                 |   |
 | `auth`           | Boolean | `false`                                                      | Match against Basic Authentication headers. We set this to `false` by default since [it was deprecated in Chromium](https://bugs.chromium.org/p/chromium/issues/detail?id=82250#c7), and otherwise it leaves the user with unwanted URL matches (more closely resembles real-world intended usage of this package by having it set to `false` by default too). |   |
-| `localhost`      | Boolean | `true`                                                       | Allows localhost in the URL hostname portion. See the [test/test.js](test/test.js) for more insight into the localhost test and how it will return a value which may be unwanted. A pull request would be considered to resolve the "pic.jp" vs. "pic.jpg" issue.                                                                                              |   |
+| `localhost`      | Boolean | `true`                                                       | Allows localhost in the URL hostname portion. See the [test/test.ts](test/test.ts) for more insight into the localhost test and how it will return a value which may be unwanted. A pull request would be considered to resolve the "pic.jp" vs. "pic.jpg" issue.                                                                                              |   |
 | `parens`         | Boolean | `false`                                                      | Match against Markdown-style trailing parenthesis. We set this to `false` because it should be up to the user to parse for Markdown URL's.                                                                                                                                                                                                                     |   |
 | `apostrophes`    | Boolean | `false`                                                      | Match against apostrophes. We set this to `false` because we don't want the String `background: url('http://example.com/pic.jpg');` to result in `http://example.com/pic.jpg'`.  See this [issue](https://github.com/kevva/url-regex/pull/55) for more information.                                                                                            |   |
 | `trailingPeriod` | Boolean | `false`                                                      | Match against trailing periods. We set this to `false` by default since real-world behavior would want `example.com` versus `example.com.` as the match (this is different than [url-regex][] where it matches the trailing period in that package).                                                                                                           |   |
@@ -141,6 +104,7 @@ Since we cannot use regular expression's "negative lookbehinds" functionality (d
 | **Nick Baugh**       | <http://niftylettuce.com/> |
 | **Kevin Mårtensson** |                            |
 | **Diego Perini**     |                            |
+| **Nerixyz**          |                            |
 
 
 ## License
@@ -148,7 +112,7 @@ Since we cannot use regular expression's "negative lookbehinds" functionality (d
 [MIT](LICENSE) © [Nick Baugh](http://niftylettuce.com/)
 
 
-## 
+##
 
 [npm]: https://www.npmjs.com/
 
@@ -157,12 +121,6 @@ Since we cannot use regular expression's "negative lookbehinds" functionality (d
 [cve]: https://nvd.nist.gov/vuln/detail/CVE-2020-7661
 
 [re2]: https://github.com/uhop/node-re2
-
-[browserify]: https://github.com/browserify/browserify
-
-[webpack]: https://github.com/webpack/webpack
-
-[rollup]: https://github.com/rollup/rollup
 
 [url-regex]: https://github.com/kevva/url-regex
 
